@@ -27,6 +27,8 @@
               <v-btn block size="x-large" variant="outlined" class="cyber-btn-primary" @click="createGame">
                 Initialisieren <v-icon end>mdi-rocket-launch</v-icon>
               </v-btn>
+              <router-link to="/regeln">Spielregeln ansehen</router-link>
+              
             </v-col>
 
             <v-col cols="12" md="7" class="pa-6">

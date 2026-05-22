@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: shift_user
-      POSTGRES_PASSWORD: super_secret_password # Später in Produktion ändern!
+      POSTGRES_PASSWORD: super_secret_password
       POSTGRES_DB: shift_connect
     ports:
       - "5432:5432"
