@@ -7,7 +7,7 @@
 
         <v-chip :color="currentPlayer === 1 ? '#00e5ff' : '#ff9800'" variant="outlined"
           class="text-subtitle-1 font-weight-bold px-6 py-5 player-chip">
-          
+
           <span v-if="playerCount < 2 && gameMode !== 'solo'" class="d-flex align-center">
             <v-progress-circular indeterminate size="20" width="2" class="mr-3"></v-progress-circular>
             Warte auf Gegner ({{ playerCount }}/2)
@@ -64,7 +64,7 @@
         </div>
       </v-col>
     </v-row>
-     <v-fade-transition>
+    <v-fade-transition>
       <div v-if="showWinDialog" class="win-banner bg-deep-dark cyber-dialog text-center pa-6">
         <v-card-title class="text-h4 font-weight-bold pt-2 pb-2 title-glow"
           :class="winner === 1 ? 'text-cyan' : 'text-orange'">
@@ -95,12 +95,9 @@ const storageKey = `shift_role_${roomId}`;
 
 let storedRole = parseInt(localStorage.getItem(storageKey) || '0');
 
-console.log(`🛠️ System-Check: Raum = ${roomId} | Rolle im Speicher = ${storedRole}`);
-
 if (storedRole !== 1) {
   storedRole = 2;
   localStorage.setItem(storageKey, '2');
-  console.log("🔗 Über Direktlink beigetreten: Du wurdest als Spieler 2 registriert!");
 }
 
 const myRole = ref<number>(storedRole);
@@ -115,7 +112,7 @@ const isMyTurn = computed(() => {
   if (gameMode.value === 'solo') {
     return currentPlayer.value === 1;
   }
-  
+
   return myRole.value === currentPlayer.value && playerCount.value >= 2;
 });
 
@@ -148,41 +145,6 @@ const getWinningCells = (boardState: number[][], player: number) => {
   return [];
 };
 
-const winningCells = ref<{ row: number, col: number }[]>([]);
-
-const isWinningCell = (row: number, col: number) => {
-  return winningCells.value.some(c => c.row === row && c.col === col);
-};
-
-const getWinningCells = (boardState: number[][], player: number) => {
-  const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
-  for (let r = 0; r < 7; r++) {
-    for (let c = 0; c < 7; c++) {
-      if (boardState[r][c] !== player) continue;
-      for (const [dr, dc] of dirs) {
-        let count = 1;
-        const cells = [{ row: r, col: c }];
-        for (let i = 1; i < 5; i++) {
-          const nr = r + dr * i;
-          const nc = c + dc * i;
-          if (nr >= 0 && nr < 7 && nc >= 0 && nc < 7 && boardState[nr][nc] === player) {
-            count++;
-            cells.push({ row: nr, col: nc });
-          } else { break; }
-        }
-        if (count === 5) return cells; // 5 in einer Reihe gefunden!
-      }
-    }
-  }
-  return [];
-};
-
-const playerCount = ref<number>(0);
-
-const showWinDialog = ref<boolean>(false);
-const myRole = ref<number>(parseInt(localStorage.getItem(`shift_role_${roomId}`) || '0'));
-const isMyTurn = computed(() => myRole.value === currentPlayer.value && playerCount.value >= 2);
-
 interface ShiftAnimation {
   row: number;
   col: number;
@@ -197,7 +159,7 @@ onMounted(() => {
   ws = new WebSocket(`${protocol}//${window.location.host}/ws/games/${roomId}`);
 
   ws.onopen = () => {
-    console.log(`Erfolgreich mit Raum ${roomId} verbunden!`);
+    // console.log(`Erfolgreich mit Raum ${roomId} verbunden!`);
   };
 
   ws.onmessage = (event) => {
@@ -206,7 +168,7 @@ onMounted(() => {
     board.value = update.board;
     currentPlayer.value = update.current_player;
     playerCount.value = update.player_count;
-    
+
     if (update.game_mode) {
       gameMode.value = update.game_mode;
     }

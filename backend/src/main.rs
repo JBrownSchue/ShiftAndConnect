@@ -43,14 +43,8 @@ struct JoinGameReq {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct GameAction {
     action: String,
-
-    #[serde(default)]
     row: Option<usize>,
-
-    #[serde(default)]
     col: Option<usize>,
-
-    #[serde(default)]
     direction: Option<String>,
     player: i32,
 }
@@ -212,7 +206,7 @@ async fn join_game(
     }
 }
 
-// --- NEU: LOBBY WEBSOCKET HANDLER ---
+// --- LOBBY WEBSOCKET HANDLER ---
 async fn ws_lobby_handler(
     ws: WebSocketUpgrade,
     State(state): State<Arc<AppState>>,
