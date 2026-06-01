@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT board, current_player FROM games WHERE room_code = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "board",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 1,
+        "name": "current_player",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "712b16a35b414ef07dd9c6ccc2c908bae6cb436c51ef680c0f79fb49d09c656e"
+}

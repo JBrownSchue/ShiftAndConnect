@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM games WHERE last_activity < NOW() - INTERVAL '5 minutes'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "9b5f572bc3220e9afd11cd781282e3bd7a7229f3caa1aae4a320aa3b9c4b61c7"
+}

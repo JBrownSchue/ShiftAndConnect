@@ -105,7 +105,6 @@ if (storedRole !== 1) {
 
 const myRole = ref<number>(storedRole);
 
-// Das Spielfeld
 const board = ref<number[][]>(Array.from({ length: 7 }, () => Array(7).fill(0)));
 const currentPlayer = ref<number>(1);
 const playerCount = ref<number>(0);
@@ -149,6 +148,41 @@ const getWinningCells = (boardState: number[][], player: number) => {
   return [];
 };
 
+const winningCells = ref<{ row: number, col: number }[]>([]);
+
+const isWinningCell = (row: number, col: number) => {
+  return winningCells.value.some(c => c.row === row && c.col === col);
+};
+
+const getWinningCells = (boardState: number[][], player: number) => {
+  const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 7; c++) {
+      if (boardState[r][c] !== player) continue;
+      for (const [dr, dc] of dirs) {
+        let count = 1;
+        const cells = [{ row: r, col: c }];
+        for (let i = 1; i < 5; i++) {
+          const nr = r + dr * i;
+          const nc = c + dc * i;
+          if (nr >= 0 && nr < 7 && nc >= 0 && nc < 7 && boardState[nr][nc] === player) {
+            count++;
+            cells.push({ row: nr, col: nc });
+          } else { break; }
+        }
+        if (count === 5) return cells; // 5 in einer Reihe gefunden!
+      }
+    }
+  }
+  return [];
+};
+
+const playerCount = ref<number>(0);
+
+const showWinDialog = ref<boolean>(false);
+const myRole = ref<number>(parseInt(localStorage.getItem(`shift_role_${roomId}`) || '0'));
+const isMyTurn = computed(() => myRole.value === currentPlayer.value && playerCount.value >= 2);
+
 interface ShiftAnimation {
   row: number;
   col: number;
@@ -156,11 +190,11 @@ interface ShiftAnimation {
 }
 const shiftAnim = ref<ShiftAnimation>({ row: -1, col: -1, direction: '' });
 
-// --- WEBSOCKET LOGIK ---
 let ws: WebSocket | null = null;
 
 onMounted(() => {
-  ws = new WebSocket(`ws://127.0.0.1:3000/ws/games/${roomId}`);
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${window.location.host}/ws/games/${roomId}`);
 
   ws.onopen = () => {
     console.log(`Erfolgreich mit Raum ${roomId} verbunden!`);
@@ -195,9 +229,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (ws) ws.close();
 });
-
-
-// --- SPIELER AKTIONEN ---
 
 const placePiece = (row: number, col: number) => {
   if (!isMyTurn.value) return;
@@ -344,7 +375,6 @@ const returnToLobby = () => {
   }
 }
 
-/* SPIELSTEINE */
 .piece {
   width: 48px;
   height: 48px;
@@ -375,7 +405,6 @@ const returnToLobby = () => {
   box-shadow: 0 0 15px rgba(255, 152, 0, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.4);
 }
 
-/* BUTTONS */
 .cyber-btn {
   color: #00e5ff !important;
   border-color: rgba(0, 229, 255, 0.2) !important;

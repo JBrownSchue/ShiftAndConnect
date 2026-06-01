@@ -2,30 +2,25 @@
   <v-container class="text-center fill-height bg-deep-dark" fluid>
     <v-row justify="center" align="center" class="w-100">
       <v-col cols="12" sm="10" md="10" lg="8">
-        <h1 class="text-h3 font-weight-bold text-white mb-8 title-glow">SYSTEM UPLINK</h1>
+        <h1 class="text-h3 font-weight-bold text-white mb-8 title-glow">SHIFT & CONNECT</h1>
 
         <div class="lobby-wrapper">
           <v-row no-gutters>
             <v-col cols="12" md="5" class="border-right-md pa-6 d-flex flex-column">
               <h2 class="text-h5 text-cyan accent-glow mb-6">Neues Signal</h2>
-              
+
               <v-btn-toggle v-model="gameMode" mandatory class="cyber-toggle mb-4" selected-class="cyber-toggle-active">
                 <v-btn value="duo" class="flex-grow-1"><v-icon start>mdi-account-multiple</v-icon> Duo</v-btn>
                 <v-btn value="solo" class="flex-grow-1"><v-icon start>mdi-robot</v-icon> Solo</v-btn>
               </v-btn-toggle>
 
-              <v-switch
-                v-model="isPrivate"
-                color="#00e5ff"
-                label="Privates Signal (Passwort)"
-                hide-details
-                class="mb-8 cyber-switch"
-              ></v-switch>
+              <v-switch v-model="isPrivate" color="#00e5ff" label="Privates Signal (Passwort)" hide-details
+                class="mb-8 cyber-switch"></v-switch>
 
               <v-spacer></v-spacer>
 
               <v-btn block size="x-large" variant="outlined" class="cyber-btn-primary" @click="createGame">
-                Initialisieren <v-icon end>mdi-rocket-launch</v-icon>
+                Initialisieren
               </v-btn>
               <router-link to="/regeln">Spielregeln ansehen</router-link>
               
@@ -36,20 +31,17 @@
                 <h2 class="text-h5 text-orange accent-glow">Aktive Signale</h2>
                 <v-btn icon="mdi-refresh" variant="text" color="#ff9800" @click="fetchGames"></v-btn>
               </div>
-              
+
               <div class="server-list">
                 <div v-if="gamesList.length === 0" class="text-grey text-center mt-8">
                   Keine aktiven Signale gefunden.
                 </div>
 
-                <v-card
-                  v-for="game in gamesList"
-                  :key="game.room_code"
-                  class="cyber-server-card mb-3 pa-3 d-flex justify-space-between align-center"
-                  variant="outlined"
-                >
-                  <div class="d-flex align-center">
-                    <v-icon :color="game.is_private ? 'error' : 'success'" class="mr-3">
+                <v-card v-for="game in gamesList" :key="game.room_code"
+                  class="cyber-server-card mb-3 pa-3 d-flex justify-space-between align-center cursor-pointer"
+                  variant="outlined" @click="initiateJoin(game)">
+                  <div class="d-flex align-center" style="width: 40%">
+                    <v-icon :color="game.is_private ? 'error' : 'success'" size="x-large" class="mr-4 icon-glow">
                       {{ game.is_private ? 'mdi-lock' : 'mdi-lock-open-variant' }}
                     </v-icon>
                     <div class="text-left">
@@ -57,13 +49,9 @@
                       <div class="text-caption text-grey-lighten-1">Modus: {{ game.game_mode.toUpperCase() }}</div>
                     </div>
                   </div>
-                  
-                  <v-btn
-                    icon="mdi-login"
-                    variant="tonal"
-                    :color="game.is_private ? 'error' : 'success'"
-                    @click="initiateJoin(game)"
-                  ></v-btn>
+
+                  <v-btn icon="mdi-plus" variant="tonal" :color="game.is_private ? 'error' : 'success'"
+                    @click.stop="initiateJoin(game)"></v-btn>
                 </v-card>
               </div>
             </v-col>
@@ -90,16 +78,9 @@
         <v-card-title class="text-orange text-center pt-6">Sicherheitsfreigabe</v-card-title>
         <v-card-text>
           <p class="text-center mb-4">Raum {{ selectedRoom }} erfordert ein Passwort.</p>
-          <v-text-field
-            v-model="inputPassword"
-            label="Passwort"
-            variant="outlined"
-            color="#ff9800"
-            base-color="rgba(255, 255, 255, 0.3)"
-            class="cyber-input text-center"
-            :error-messages="joinError"
-            @keyup.enter="submitJoin"
-          ></v-text-field>
+          <v-text-field v-model="inputPassword" label="Passwort" variant="outlined" color="#ff9800"
+            base-color="rgba(255, 255, 255, 0.3)" class="cyber-input text-center" :error-messages="joinError"
+            @keyup.enter="submitJoin"></v-text-field>
         </v-card-text>
         <v-card-actions class="justify-center pb-6">
           <v-btn color="grey" variant="text" @click="showJoinDialog = false">Abbrechen</v-btn>
@@ -117,14 +98,12 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// State: Erstellung
 const gameMode = ref<string>('duo');
 const isPrivate = ref<boolean>(false);
 const createdRoomCode = ref<string>('');
 const createdPassword = ref<string>('');
 const showCreatedPasswordDialog = ref<boolean>(false);
 
-// State: Server Liste
 interface GameListItem {
   room_code: string;
   game_mode: string;
@@ -132,13 +111,11 @@ interface GameListItem {
 }
 const gamesList = ref<GameListItem[]>([]);
 
-// State: Join Flow
 const showJoinDialog = ref<boolean>(false);
 const selectedRoom = ref<string>('');
 const inputPassword = ref<string>('');
 const joinError = ref<string>('');
 
-// --- LOBBY ECHTZEIT-VERBINDUNG ---
 let lobbyWs: WebSocket | null = null;
 
 onMounted(() => {
@@ -161,7 +138,7 @@ onUnmounted(() => {
 
 const fetchGames = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:3000/api/games');
+    const response = await fetch('/api/games');
     if (response.ok) {
       gamesList.value = await response.json();
     }
@@ -170,13 +147,12 @@ const fetchGames = async () => {
   }
 };
 
-// Spiel erstellen
 const createGame = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:3000/api/games', {
+    const response = await fetch('/api/games', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: gameMode.value, is_private: isPrivate.value }), 
+      body: JSON.stringify({ mode: gameMode.value, is_private: isPrivate.value }),
     });
 
     if (response.ok) {
@@ -224,7 +200,7 @@ const submitJoin = async () => {
 
 const attemptJoin = async (roomCode: string, password: string | null) => {
   try {
-    const response = await fetch(`http://127.0.0.1:3000/api/games/${roomCode}/join`, {
+    const response = await fetch(`/api/games/${roomCode}/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
@@ -249,11 +225,27 @@ const attemptJoin = async (roomCode: string, password: string | null) => {
 </script>
 
 <style scoped>
-.bg-deep-dark { background-color: #121418; background-image: radial-gradient(circle at 50% 0%, #1f2532 0%, #121418 70%); }
-.title-glow { text-shadow: 0 0 20px rgba(255, 255, 255, 0.2); letter-spacing: 4px; }
-.accent-glow { text-shadow: 0 0 10px currentColor; }
-.text-cyan { color: #00e5ff !important; }
-.text-orange { color: #ff9800 !important; }
+.bg-deep-dark {
+  background-color: #121418;
+  background-image: radial-gradient(circle at 50% 0%, #1f2532 0%, #121418 70%);
+}
+
+.title-glow {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  letter-spacing: 4px;
+}
+
+.accent-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.text-cyan {
+  color: #00e5ff !important;
+}
+
+.text-orange {
+  color: #ff9800 !important;
+}
 
 .lobby-wrapper {
   background: linear-gradient(145deg, #252a35, #181a22);
@@ -263,44 +255,95 @@ const attemptJoin = async (roomCode: string, password: string | null) => {
   overflow: hidden;
 }
 
-@media (min-width: 960px) { .border-right-md { border-right: 1px solid rgba(255, 255, 255, 0.05); } }
+@media (min-width: 960px) {
+  .border-right-md {
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
 
-.cyber-toggle { background-color: rgba(0, 0, 0, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; width: 100%; }
-.cyber-toggle-active { background-color: rgba(0, 229, 255, 0.15) !important; color: #00e5ff !important; border-color: rgba(0, 229, 255, 0.5) !important; box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2); }
+.cyber-toggle {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: 100%;
+}
 
-.cyber-btn-primary { color: #00e5ff !important; border-color: rgba(0, 229, 255, 0.3) !important; background-color: rgba(0, 0, 0, 0.2); border-radius: 8px; font-weight: bold; letter-spacing: 1px; }
-.cyber-btn-primary:hover { background-color: rgba(0, 229, 255, 0.1); border-color: rgba(0, 229, 255, 0.8) !important; box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
+.cyber-toggle-active {
+  background-color: rgba(0, 229, 255, 0.15) !important;
+  color: #00e5ff !important;
+  border-color: rgba(0, 229, 255, 0.5) !important;
+  box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2);
+}
 
-/* Server List Area */
+.cyber-btn-primary {
+  color: #00e5ff !important;
+  border-color: rgba(0, 229, 255, 0.3) !important;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.cyber-btn-primary:hover {
+  background-color: rgba(0, 229, 255, 0.1);
+  border-color: rgba(0, 229, 255, 0.8) !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+}
+
 .server-list {
   max-height: 350px;
   overflow-y: auto;
   padding-right: 10px;
 }
 
-/* Custom Scrollbar */
-.server-list::-webkit-scrollbar { width: 6px; }
-.server-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-.server-list::-webkit-scrollbar-thumb { background: rgba(255, 152, 0, 0.5); border-radius: 4px; }
+.server-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.server-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.server-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 152, 0, 0.5);
+  border-radius: 4px;
+}
 
 .cyber-server-card {
   background: rgba(0, 0, 0, 0.3) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   transition: all 0.2s ease;
 }
+
 .cyber-server-card:hover {
   background: rgba(0, 0, 0, 0.5) !important;
   border-color: rgba(255, 152, 0, 0.4) !important;
   transform: translateX(4px);
 }
 
-/* Dialogs */
 .cyber-dialog {
   border: 1px solid rgba(0, 229, 255, 0.2);
-  box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
-.tracking-widest { letter-spacing: 6px; }
 
-/* Input */
-:deep(.cyber-input input) { color: white !important; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+.tracking-widest {
+  letter-spacing: 6px;
+}
+
+:deep(.cyber-input input) {
+  color: white !important;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.icon-glow {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
 </style>

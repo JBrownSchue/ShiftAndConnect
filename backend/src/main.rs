@@ -130,7 +130,6 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-// --- REST API ---
 
 async fn list_games(
     State(state): State<Arc<AppState>>,
@@ -360,7 +359,6 @@ async fn handle_socket(socket: WebSocket, room_code: String, state: Arc<AppState
     tokio::select! { _ = (&mut send_task) => recv_task.abort(), _ = (&mut recv_task) => send_task.abort() };
 }
 
-// --- SPIELLOGIK HILFSFUNKTIONEN (Unverändert) ---
 fn process_action(board: &mut Vec<Vec<i32>>, action: &GameAction) {
     match action.action.as_str() {
         "place" => {

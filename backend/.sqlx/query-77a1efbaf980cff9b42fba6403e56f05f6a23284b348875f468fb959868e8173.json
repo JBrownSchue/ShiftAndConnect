@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT is_private, password FROM games WHERE room_code = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_private",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "password",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "77a1efbaf980cff9b42fba6403e56f05f6a23284b348875f468fb959868e8173"
+}
