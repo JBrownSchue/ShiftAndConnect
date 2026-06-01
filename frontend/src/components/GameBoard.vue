@@ -118,10 +118,6 @@ const isMyTurn = computed(() => {
 
 const winningCells = ref<{ row: number, col: number }[]>([]);
 
-const isWinningCell = (row: number, col: number) => {
-  return winningCells.value.some(c => c.row === row && c.col === col);
-};
-
 const getWinningCells = (boardState: number[][], player: number) => {
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
   for (let r = 0; r < 7; r++) {
