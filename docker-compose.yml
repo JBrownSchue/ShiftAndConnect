@@ -1,8 +1,6 @@
 services:
   db:
     image: postgres:15
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: shift_user
       POSTGRES_PASSWORD: super_secret_password
