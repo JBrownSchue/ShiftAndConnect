@@ -22,6 +22,8 @@
               <v-btn block size="x-large" variant="outlined" class="cyber-btn-primary" @click="createGame">
                 Initialisieren
               </v-btn>
+              <router-link to="/regeln">Spielregeln ansehen</router-link>
+              
             </v-col>
 
             <v-col cols="12" md="7" class="pa-6">
@@ -119,9 +121,8 @@ let lobbyWs: WebSocket | null = null;
 onMounted(() => {
   fetchGames();
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  lobbyWs = new WebSocket(`${protocol}//${window.location.host}/ws/lobby`);
-
+  lobbyWs = new WebSocket('ws://127.0.0.1:3000/ws/lobby');
+  
   lobbyWs.onmessage = (event) => {
     if (event.data === 'update') {
       fetchGames();
@@ -157,9 +158,9 @@ const createGame = async () => {
     if (response.ok) {
       const data = await response.json();
       createdRoomCode.value = data.room_code;
-
+      
       localStorage.setItem(`shift_role_${data.room_code}`, '1');
-
+      
       if (isPrivate.value && data.password) {
         createdPassword.value = data.password;
         showCreatedPasswordDialog.value = true;
@@ -207,7 +208,9 @@ const attemptJoin = async (roomCode: string, password: string | null) => {
 
     if (response.ok) {
       showJoinDialog.value = false;
+
       localStorage.setItem(`shift_role_${roomCode}`, '2');
+      
       router.push(`/game/${roomCode}`);
     } else if (response.status === 401) {
       joinError.value = "Falsches Passwort!";

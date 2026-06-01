@@ -5,14 +5,18 @@
       <v-col cols="12" class="mb-4 d-flex justify-center align-center">
         <v-btn icon="mdi-arrow-left" variant="text" color="grey" @click="router.push('/')" class="mr-4"></v-btn>
 
-        <v-chip :color="playerCount < 2 ? 'grey' : (currentPlayer === 1 ? '#00e5ff' : '#ff9800')" variant="outlined"
-          class="text-subtitle-1 font-weight-bold px-6 py-5 player-chip" v-if="!winner">
-          <span v-if="playerCount < 2">
-            <v-progress-circular indeterminate size="20" width="2" class="mr-2"></v-progress-circular>
+        <v-chip :color="currentPlayer === 1 ? '#00e5ff' : '#ff9800'" variant="outlined"
+          class="text-subtitle-1 font-weight-bold px-6 py-5 player-chip">
+          
+          <span v-if="playerCount < 2 && gameMode !== 'solo'" class="d-flex align-center">
+            <v-progress-circular indeterminate size="20" width="2" class="mr-3"></v-progress-circular>
             Warte auf Gegner ({{ playerCount }}/2)
           </span>
-          <span v-else-if="isMyTurn">DU bist am Zug (Spieler {{ currentPlayer }})</span>
-          <span v-else>GEGNER ist am Zug (Spieler {{ currentPlayer }})</span>
+
+          <span v-else>
+            Spieler {{ currentPlayer }} ist am Zug
+          </span>
+
         </v-chip>
       </v-col>
 
@@ -22,24 +26,16 @@
 
             <div class="empty-corner"></div>
             <div v-for="col in 7" :key="'col-down-' + col" class="shift-btn">
-              <v-tooltip text="Spalte nach unten drücken" location="top">
-                <template v-slot:activator="{ props }">
-                  <v-btn v-bind="props" icon="mdi-arrow-down-bold" variant="outlined" class="cyber-btn" size="small"
-                    @click="shiftCol(col - 1, 'down')"></v-btn>
-                </template>
-              </v-tooltip>
+              <v-btn icon="mdi-chevron-double-down" variant="outlined" class="cyber-btn" size="small"
+                @click="shiftCol(col - 1, 'down')"></v-btn>
             </div>
             <div class="empty-corner"></div>
 
             <template v-for="(row, rowIndex) in board" :key="'row-' + rowIndex">
 
               <div class="shift-btn">
-                <v-tooltip text="Reihe nach rechts drücken" location="left">
-                  <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon="mdi-arrow-right-bold" variant="outlined" class="cyber-btn" size="small"
-                      @click="shiftRow(rowIndex, 'right')"></v-btn>
-                  </template>
-                </v-tooltip>
+                <v-btn icon="mdi-chevron-double-right" variant="outlined" class="cyber-btn" size="small"
+                  @click="shiftRow(rowIndex, 'right')"></v-btn>
               </div>
 
               <div v-for="(cell, colIndex) in row" :key="'cell-' + rowIndex + '-' + colIndex" class="cell" :class="{
@@ -47,29 +43,20 @@
                 'anim-shift-left': shiftAnim.row === rowIndex && shiftAnim.direction === 'left',
                 'anim-shift-down': shiftAnim.col === colIndex && shiftAnim.direction === 'down',
                 'anim-shift-up': shiftAnim.col === colIndex && shiftAnim.direction === 'up',
-                'winning-cell-highlight': isWinningCell(rowIndex, colIndex)
               }" @click="placePiece(rowIndex, colIndex)">
                 <div v-if="cell !== 0" class="piece" :class="{ 'player1': cell === 1, 'player2': cell === 2 }"></div>
               </div>
 
               <div class="shift-btn">
-                <v-tooltip text="Reihe nach links drücken" location="right">
-                  <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon="mdi-arrow-left-bold" variant="outlined" class="cyber-btn" size="small"
-                      @click="shiftRow(rowIndex, 'left')"></v-btn>
-                  </template>
-                </v-tooltip>
+                <v-btn icon="mdi-chevron-double-left" variant="outlined" class="cyber-btn" size="small"
+                  @click="shiftRow(rowIndex, 'left')"></v-btn>
               </div>
             </template>
 
             <div class="empty-corner"></div>
             <div v-for="col in 7" :key="'col-up-' + col" class="shift-btn">
-              <v-tooltip text="Spalte nach oben drücken" location="bottom">
-                <template v-slot:activator="{ props }">
-                  <v-btn v-bind="props" icon="mdi-arrow-up-bold" variant="outlined" class="cyber-btn" size="small"
-                    @click="shiftCol(col - 1, 'up')"></v-btn>
-                </template>
-              </v-tooltip>
+              <v-btn icon="mdi-chevron-double-up" variant="outlined" class="cyber-btn" size="small"
+                @click="shiftCol(col - 1, 'up')"></v-btn>
             </div>
             <div class="empty-corner"></div>
 
@@ -77,7 +64,7 @@
         </div>
       </v-col>
     </v-row>
-    <v-fade-transition>
+     <v-fade-transition>
       <div v-if="showWinDialog" class="win-banner bg-deep-dark cyber-dialog text-center pa-6">
         <v-card-title class="text-h4 font-weight-bold pt-2 pb-2 title-glow"
           :class="winner === 1 ? 'text-cyan' : 'text-orange'">
@@ -101,11 +88,65 @@ import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
-const roomId = route.params.id as string;
+const roomId = String(route.params.id).toUpperCase();
+const gameMode = ref<string>('');
+
+const storageKey = `shift_role_${roomId}`;
+
+let storedRole = parseInt(localStorage.getItem(storageKey) || '0');
+
+console.log(`🛠️ System-Check: Raum = ${roomId} | Rolle im Speicher = ${storedRole}`);
+
+if (storedRole !== 1) {
+  storedRole = 2;
+  localStorage.setItem(storageKey, '2');
+  console.log("🔗 Über Direktlink beigetreten: Du wurdest als Spieler 2 registriert!");
+}
+
+const myRole = ref<number>(storedRole);
 
 const board = ref<number[][]>(Array.from({ length: 7 }, () => Array(7).fill(0)));
 const currentPlayer = ref<number>(1);
+const playerCount = ref<number>(0);
 const winner = ref<number | null>(null);
+const showWinDialog = ref<boolean>(false);
+
+const isMyTurn = computed(() => {
+  if (gameMode.value === 'solo') {
+    return currentPlayer.value === 1;
+  }
+  
+  return myRole.value === currentPlayer.value && playerCount.value >= 2;
+});
+
+const winningCells = ref<{ row: number, col: number }[]>([]);
+
+const isWinningCell = (row: number, col: number) => {
+  return winningCells.value.some(c => c.row === row && c.col === col);
+};
+
+const getWinningCells = (boardState: number[][], player: number) => {
+  const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 7; c++) {
+      if (boardState[r][c] !== player) continue;
+      for (const [dr, dc] of dirs) {
+        let count = 1;
+        const cells = [{ row: r, col: c }];
+        for (let i = 1; i < 5; i++) {
+          const nr = r + dr * i;
+          const nc = c + dc * i;
+          if (nr >= 0 && nr < 7 && nc >= 0 && nc < 7 && boardState[nr][nc] === player) {
+            count++;
+            cells.push({ row: nr, col: nc });
+          } else { break; }
+        }
+        if (count === 5) return cells; // 5 in einer Reihe gefunden!
+      }
+    }
+  }
+  return [];
+};
 
 const winningCells = ref<{ row: number, col: number }[]>([]);
 
@@ -164,23 +205,11 @@ onMounted(() => {
 
     board.value = update.board;
     currentPlayer.value = update.current_player;
-
-    if (update.winner) {
-      winner.value = update.winner;
-
-      setTimeout(() => {
-        alert(`🎉 SPIELER ${update.winner} HAT GEWONNEN! 🎉\nDie Lobby wird nun geschlossen.`);
-        router.push('/');
-      }, 500);
-    }
-  };
-
-  ws.onmessage = (event) => {
-    const update = JSON.parse(event.data);
-
-    board.value = update.board;
-    currentPlayer.value = update.current_player;
     playerCount.value = update.player_count;
+    
+    if (update.game_mode) {
+      gameMode.value = update.game_mode;
+    }
 
     if (update.winner) {
       winner.value = update.winner;
@@ -204,7 +233,7 @@ onUnmounted(() => {
 const placePiece = (row: number, col: number) => {
   if (!isMyTurn.value) return;
   if (board.value[row][col] === 0 && ws && ws.readyState === WebSocket.OPEN) {
-    const payload = { action: 'place', row, col, player: currentPlayer.value };
+    const payload = { action: 'place', row, col, direction: null, player: currentPlayer.value };
     ws.send(JSON.stringify(payload));
   }
 };
@@ -213,7 +242,7 @@ const shiftRow = (rowIndex: number, direction: 'right' | 'left') => {
   if (!isMyTurn.value) return;
   if (ws && ws.readyState === WebSocket.OPEN) {
     triggerAnimation('row', rowIndex, direction);
-    const payload = { action: 'shift_row', row: rowIndex, direction, player: currentPlayer.value };
+    const payload = { action: 'shift_row', row: rowIndex, direction: direction, player: currentPlayer.value };
     ws.send(JSON.stringify(payload));
   }
 };
@@ -222,7 +251,7 @@ const shiftCol = (colIndex: number, direction: 'up' | 'down') => {
   if (!isMyTurn.value) return;
   if (ws && ws.readyState === WebSocket.OPEN) {
     triggerAnimation('col', colIndex, direction);
-    const payload = { action: 'shift_col', col: colIndex, direction, player: currentPlayer.value };
+    const payload = { action: 'shift_col', col: colIndex, direction: direction, player: currentPlayer.value };
     ws.send(JSON.stringify(payload));
   }
 };
@@ -281,6 +310,7 @@ const returnToLobby = () => {
   border-color: rgba(0, 229, 255, 0.3);
 }
 
+/* --- ANIMATIONEN --- */
 .anim-shift-right {
   animation: slideGlowRight 0.3s ease-out;
 }
@@ -421,86 +451,5 @@ const returnToLobby = () => {
 .empty-corner {
   width: 100%;
   height: 100%;
-}
-
-.cyber-dialog {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(145deg, #1a1e25, #121418) !important;
-}
-
-.title-glow {
-  text-shadow: 0 0 15px currentColor;
-  letter-spacing: 2px;
-}
-
-.text-cyan {
-  color: #00e5ff !important;
-}
-
-.text-orange {
-  color: #ff9800 !important;
-}
-
-.trophy-glow {
-  filter: drop-shadow(0 0 15px currentColor);
-  animation: float 2s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.disabled-board {
-  opacity: 0.6;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.winning-cell-highlight {
-  box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.7) !important;
-  border: 2px solid white !important;
-  animation: pulseWin 1s infinite alternate;
-  z-index: 10;
-  position: relative;
-}
-
-@keyframes pulseWin {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-  }
-
-  100% {
-    transform: scale(1.15);
-    box-shadow: 0 0 30px rgba(255, 255, 255, 1);
-  }
-}
-
-.win-banner {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  width: 90%;
-  max-width: 600px;
-  border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(145deg, #1a1e25, #121418);
-}
-
-.game-over-board {
-  pointer-events: none;
 }
 </style>
