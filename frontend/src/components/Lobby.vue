@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'; // onUnmounted hinzugefügt
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -128,7 +128,7 @@ const showCreatedPasswordDialog = ref<boolean>(false);
 interface GameListItem {
   room_code: string;
   game_mode: string;
-  is_private: boolean; // boolean statt bool in TS!
+  is_private: boolean;
 }
 const gamesList = ref<GameListItem[]>([]);
 
@@ -142,27 +142,23 @@ const joinError = ref<string>('');
 let lobbyWs: WebSocket | null = null;
 
 onMounted(() => {
-  fetchGames(); // Initiales Laden
+  fetchGames();
 
-  // Verbinde dich mit dem Lobby-Kanal
   lobbyWs = new WebSocket('ws://127.0.0.1:3000/ws/lobby');
   
   lobbyWs.onmessage = (event) => {
-    // Wenn der Server "update" schickt (neues Spiel, Spiel gewonnen oder Inaktivität)
     if (event.data === 'update') {
-      fetchGames(); // Liste lautlos im Hintergrund aktualisieren
+      fetchGames();
     }
   };
 });
 
 onUnmounted(() => {
-  // Wenn der Spieler die Lobby verlässt, Verbindung trennen
   if (lobbyWs) {
     lobbyWs.close();
   }
 });
 
-// Holt die Liste der aktiven Spiele
 const fetchGames = async () => {
   try {
     const response = await fetch('http://127.0.0.1:3000/api/games');
@@ -187,8 +183,7 @@ const createGame = async () => {
       const data = await response.json();
       createdRoomCode.value = data.room_code;
       
-      // Hinweis: Wir müssen hier fetchGames() nicht mehr manuell rufen, 
-      // da der Server sofort ein 'update' über WebSocket schickt!
+      localStorage.setItem(`shift_role_${data.room_code}`, '1');
       
       if (isPrivate.value && data.password) {
         createdPassword.value = data.password;
@@ -237,12 +232,15 @@ const attemptJoin = async (roomCode: string, password: string | null) => {
 
     if (response.ok) {
       showJoinDialog.value = false;
+
+      localStorage.setItem(`shift_role_${roomCode}`, '2');
+      
       router.push(`/game/${roomCode}`);
     } else if (response.status === 401) {
       joinError.value = "Falsches Passwort!";
     } else {
       joinError.value = "Raum nicht gefunden.";
-      fetchGames(); // Falls der Raum in der Zwischenzeit gelöscht wurde
+      fetchGames();
     }
   } catch (error) {
     console.error("Join Fehler:", error);
