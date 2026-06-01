@@ -95,7 +95,6 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "axum",
- "dotenvy",
  "futures-util",
  "rand 0.10.1",
  "serde",
